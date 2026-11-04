@@ -1,0 +1,152 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+    function own(uid) {
+      return verified() && request.auth.uid == uid;
+    }
+    function staff() {
+      return verified() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function sameUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function stepDoc(uid, date) {
+      return /databases/$(database)/documents/stepLogs/$(uid)/days/$(date);
+    }
+    function leaderDoc(uid) {
+      return /databases/$(database)/documents/leaderboard/$(uid);
+    }
+    function validStep(uid, date) {
+      return request.resource.data.keys().hasAll(['uid','date','steps','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['uid','date','steps','createdAt','updatedAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.date == date
+        && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.steps is int
+        && request.resource.data.steps >= 0
+        && request.resource.data.steps <= 100000
+        && request.resource.data.updatedAt == request.time;
+    }
+    // A day entry and public cumulative total must be updated in the same transaction.
+    function pairedDayUpdate(uid, date, previousSteps, dayIncrease) {
+      let before = get(leaderDoc(uid)).data;
+      let after = getAfter(leaderDoc(uid)).data;
+      return after.lastChangedDate == date
+        && after.totalSteps == before.totalSteps + request.resource.data.steps - previousSteps
+        && after.daysLogged == before.daysLogged + dayIncrease;
+    }
+    function validLeaderboardUpdate(uid) {
+      let date = request.resource.data.lastChangedDate;
+      let previous = exists(stepDoc(uid,date)) ? get(stepDoc(uid,date)).data.steps : 0;
+      let latest = getAfter(stepDoc(uid,date)).data.steps;
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalSteps','daysLogged','lastChangedDate','updatedAt'])
+        && date is string && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.totalSteps is int
+        && request.resource.data.totalSteps >= 0
+        && request.resource.data.daysLogged is int
+        && request.resource.data.daysLogged >= 0
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.totalSteps == resource.data.totalSteps + latest - previous
+        && request.resource.data.daysLogged == resource.data.daysLogged + (exists(stepDoc(uid,date)) ? 0 : 1);
+    }
+
+    // Keep legal/contact identity confidential. Only owner and TAN staff can read it.
+    match /users/{uid} {
+      allow get, list: if own(uid) || staff();
+      allow create: if sameUser(uid)
+        && request.resource.data.keys().hasAll(['uid','fullName','displayName','email','createdAt'])
+        && request.resource.data.keys().hasOnly(['uid','fullName','displayName','email','createdAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 80
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 2
+        && request.resource.data.displayName.size() <= 30
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // Participant-facing display names and scores only; never include emails here.
+    match /leaderboard/{uid} {
+      allow read: if verified();
+      allow create: if sameUser(uid)
+        && request.resource.data.keys().hasAll(['uid','displayName','totalSteps','daysLogged','lastChangedDate','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['uid','displayName','totalSteps','daysLogged','lastChangedDate','createdAt','updatedAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.displayName == getAfter(/databases/$(database)/documents/users/$(uid)).data.displayName
+        && request.resource.data.totalSteps == 0
+        && request.resource.data.daysLogged == 0
+        && request.resource.data.lastChangedDate == ''
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if own(uid) && validLeaderboardUpdate(uid);
+      allow delete: if false;
+    }
+
+    // Each participant has one stable document per calendar day.
+    match /stepLogs/{uid}/days/{date} {
+      allow get, list: if own(uid) || staff();
+      allow create: if own(uid)
+        && validStep(uid,date)
+        && request.resource.data.createdAt == request.time
+        && pairedDayUpdate(uid,date,0,1);
+      allow update: if own(uid)
+        && validStep(uid,date)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && pairedDayUpdate(uid,date,resource.data.steps,0);
+      allow delete: if false;
+    }
+    // Explicit recursive match permits staff collection-group exports across users.
+    match /{path=**}/days/{date} {
+      allow list: if staff();
+    }
+
+    match /messages/{messageId} {
+      allow read: if verified();
+      allow create: if verified()
+        && request.resource.data.keys().hasAll(['uid','displayName','text','createdAt'])
+        && request.resource.data.keys().hasOnly(['uid','displayName','text','createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.displayName == get(leaderDoc(request.auth.uid)).data.displayName
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 300
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if verified() && (resource.data.uid == request.auth.uid || staff());
+    }
+
+    match /reports/{reportId} {
+      allow get: if staff() || (verified() && resource.data.reporterUid == request.auth.uid);
+      allow list: if staff();
+      allow create: if verified()
+        && request.resource.data.keys().hasAll(['reporterUid','messageId','messageUid','messageText','createdAt'])
+        && request.resource.data.keys().hasOnly(['reporterUid','messageId','messageUid','messageText','createdAt'])
+        && request.resource.data.reporterUid == request.auth.uid
+        && reportId == request.auth.uid + '_' + request.resource.data.messageId
+        && exists(/databases/$(database)/documents/messages/$(request.resource.data.messageId))
+        && request.resource.data.messageUid == get(/databases/$(database)/documents/messages/$(request.resource.data.messageId)).data.uid
+        && request.resource.data.messageText == get(/databases/$(database)/documents/messages/$(request.resource.data.messageId)).data.text
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if staff();
+    }
+
+    // TAN staff permissions are provisioned manually in Firebase Console.
+    // A participant cannot grant staff access to themselves.
+    match /admins/{uid} {
+      allow get: if sameUser(uid);
+      allow list, create, update, delete: if false;
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
