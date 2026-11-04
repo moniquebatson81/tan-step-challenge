@@ -5,6 +5,7 @@
 ## What is included
 
 - Registration with email, password, **one stable profile per Firebase account**, and email verification.
+- **Forgot password?** on the sign-in screen sends a Firebase Authentication email reset link. Participants keep the same account, daily step history, and leaderboard identity.
 - Private full name and email; participant-visible chosen display name.
 - A seven-day entry screen: fill in any subset of days, and correct previous dates without duplicating records.
 - Cumulative top-10 leaderboard visible to **all verified participants**; also shows each participant's rank.
@@ -60,6 +61,7 @@ Note: the Firebase web config in `firebase-config.js` is a public client identif
 - [ ] Authentication Email/Password enabled; website domain authorized.
 - [ ] Firestore created in Production mode and `firestore.rules` successfully published.
 - [ ] Create two test accounts and verify both emails.
+- [ ] Test **Forgot password?** with a real test account: enter its email, open the Firebase reset email, choose a new password, sign in again, and confirm the original step history is unchanged. Also confirm the page handles blank or unregistered emails without exposing private account details.
 - [ ] Each participant can edit their own daily steps, including corrections. Step totals update exactly once per date.
 - [ ] Each participant sees the shared leaderboard and chat but cannot read other participants' emails, names, or daily detail records.
 - [ ] Different test account cannot edit another person's step records via Firestore client.
