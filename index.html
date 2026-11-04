@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#073f4b">
+  <meta name="description" content="TAN Healthcare Step Challenge: track your progress, cheer each other on, and keep moving together.">
+  <title>TAN Step Challenge | Every step counts</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="TAN Step Challenge home"><span class="brand-icon">↗</span><span><strong>TAN</strong> HEALTHCARE <small>STEP CHALLENGE</small></span></a>
+      <div class="header-end"><span class="header-tag">MOVE MORE. TOGETHER.</span><button id="sign-out" class="btn btn-ghost" hidden>Sign out</button></div>
+    </header>
+
+    <main>
+      <section id="auth-screen" class="auth-layout">
+        <div class="auth-hero">
+          <div class="eyebrow light">WELCOME TO THE CHALLENGE</div>
+          <h1>One step at a time.<br><em>Better together.</em></h1>
+          <p>Track your daily steps, see how far you've come, and cheer on a community that's moving with you.</p>
+          <div class="hero-features"><span>✓ Daily tracking</span><span>✓ Friendly leaderboard</span><span>✓ Community encouragement</span></div>
+          <div class="hero-foot">Small steps. Real progress. Everyone belongs.</div>
+        </div>
+        <div class="auth-panel panel">
+          <div class="eyebrow">YOUR CHALLENGE STARTS HERE</div>
+          <h2 id="auth-heading">Welcome back!</h2>
+          <p class="muted">Sign in to log steps and connect with your fellow participants.</p>
+          <div class="toggle-bar"><button id="show-login" class="toggle active" type="button">Sign in</button><button id="show-register" class="toggle" type="button">Create account</button></div>
+          <form id="login-form" class="form-stack">
+            <label>Email<input id="login-email" type="email" autocomplete="email" required></label>
+            <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
+            <button class="btn btn-primary btn-full" type="submit">Sign in <span aria-hidden="true">→</span></button>
+            <button id="reset-password" class="text-link" type="button">Forgot password?</button>
+          </form>
+          <form id="register-form" class="form-stack" hidden>
+            <label>Full name <span class="helper">Only you and TAN staff will see this.</span><input id="register-name" type="text" maxlength="80" autocomplete="name" required></label>
+            <label>Leaderboard/chat name <span class="helper">Visible to registered participants. Choose carefully; it stays consistent.</span><input id="register-display" type="text" maxlength="30" placeholder="Example: Jane S." required></label>
+            <label>Email<input id="register-email" type="email" autocomplete="email" required></label>
+            <label>Password <span class="helper">At least 8 characters.</span><input id="register-password" type="password" autocomplete="new-password" minlength="8" required></label>
+            <label class="check-label"><input id="register-agree" type="checkbox" required><span>I understand my display name and step totals are visible to registered participants. I'll keep chat respectful and won't post anyone's private health information.</span></label>
+            <button class="btn btn-primary btn-full" type="submit">Join the challenge →</button>
+          </form>
+          <p id="auth-status" class="status" role="status" aria-live="polite"></p>
+          <p class="fine-print">A free community challenge hosted by TAN Healthcare. Participation is voluntary. Step counts are self-reported.</p>
+        </div>
+      </section>
+
+      <section id="verify-screen" class="center-screen" hidden>
+        <div class="panel verify-panel">
+          <div class="big-icon">✉</div><h2>Check your inbox</h2>
+          <p>We emailed you a verification link. Open it to confirm your account before logging steps or entering the chat room.</p>
+          <div class="form-stack"><button id="verify-check" class="btn btn-primary btn-full">I've verified my email</button><button id="verify-resend" class="btn btn-outline btn-full">Resend verification email</button></div>
+          <p id="verify-status" class="status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="main-screen" hidden>
+        <div id="demo-banner" class="demo-banner" hidden>DESIGN PREVIEW ONLY · Fictional participants · No data is saved</div>
+        <div class="dashboard-hero"><div><div class="eyebrow light">THE TAN STEP CHALLENGE</div><h1>Keep moving, <span id="greeting-name">friend</span>!</h1><p>Every step counts, and we're cheering you on.</p></div><div class="hero-spark" aria-hidden="true">✦</div></div>
+        <nav class="tab-nav" aria-label="Challenge sections">
+          <button class="tab active" data-tab="home">⌂ <span>Overview</span></button>
+          <button class="tab" data-tab="log">↗ <span>Log steps</span></button>
+          <button class="tab" data-tab="leaderboard">★ <span>Leaderboard</span></button>
+          <button class="tab" data-tab="chat">◉ <span>Community</span></button>
+          <button class="tab" data-tab="progress">▥ <span>My progress</span></button>
+          <button class="tab" data-tab="admin" id="admin-tab" hidden>⚙ <span>TAN staff</span></button>
+        </nav>
+        <p id="global-status" class="status" role="status" aria-live="polite"></p>
+
+        <section class="page" id="page-home">
+          <div class="section-title"><div><div class="eyebrow">YOUR JOURNEY SO FAR</div><h2>A little progress adds up.</h2></div></div>
+          <div class="stats-grid"><article class="stat panel"><div class="stat-icon">↗</div><span class="stat-label">TOTAL STEPS</span><strong id="home-total">0</strong><span class="muted small">Keep stacking those steps!</span></article><article class="stat panel"><div class="stat-icon orange">◫</div><span class="stat-label">DAYS LOGGED</span><strong id="home-days">0</strong><span class="muted small">Every day is a win.</span></article><article class="stat panel"><div class="stat-icon blue">★</div><span class="stat-label">YOUR RANK</span><strong id="home-rank">—</strong><span class="muted small">Among challenge participants</span></article></div>
+          <div class="split-grid"><article class="panel content-panel"><div class="panel-head"><div><div class="eyebrow">FRIENDLY COMPETITION</div><h3>Leaders this week? <span class="muted smaller">Overall totals</span></h3></div><button class="text-link" data-goto="leaderboard">See top 10 →</button></div><div id="home-leaders" class="leader-list"></div></article><article class="panel community-callout"><div class="eyebrow">WE'RE BETTER TOGETHER</div><h3>Find your people.<br>Find your motivation.</h3><p>Share a win, get inspired, or give someone a little encouragement. We're all on the same team here.</p><button class="btn btn-primary" data-goto="chat">Visit community chat →</button><div class="community-doodle" aria-hidden="true">♡ ✦ ♡</div></article></div>
+        </section>
+
+        <section class="page" id="page-log" hidden>
+          <div class="section-title"><div><div class="eyebrow">SHOW UP FOR YOURSELF</div><h2>Log your steps.</h2><p class="muted">Enter one day or fill in all seven. You can come back later to fix an entry. Each date is counted only once.</p></div></div>
+          <article class="panel content-panel"><div class="week-header"><div><h3>Daily step log</h3><p class="muted small">Select any date in the week you want to report.</p></div><label class="week-picker">Week of<input id="week-picker" type="date"></label></div><div id="week-fields" class="week-grid"></div><div class="form-bottom"><p class="muted small">Leave days blank if you're not submitting them. Enter 0 for a day with no steps.</p><button id="save-week" class="btn btn-primary">Save selected days →</button></div><p id="steps-status" class="status" role="status" aria-live="polite"></p></article>
+          <article class="panel content-panel history-panel"><div class="panel-head"><h3>Recent entries</h3></div><div id="history-list"></div></article>
+        </section>
+
+        <section class="page" id="page-leaderboard" hidden>
+          <div class="section-title"><div><div class="eyebrow">A LITTLE FRIENDLY MOTIVATION</div><h2>The leaderboard.</h2><p class="muted">The top 10 participants by total steps. Join in when you want, and remember: everyone's progress matters.</p></div></div>
+          <div class="split-grid leaderboard-layout"><article class="panel content-panel"><div class="panel-head"><h3>Top 10</h3><span class="chip">Updates as steps are logged</span></div><div id="full-leaders" class="leader-list"></div></article><article class="panel leaderboard-side"><div class="big-icon">★</div><div class="eyebrow">YOUR PLACE IN THE CHALLENGE</div><div id="personal-rank" class="huge-number">—</div><p id="rank-summary">Your progress is worth celebrating, no matter your rank.</p><div class="subtle-rule"></div><p class="muted small">Leaderboard display names are visible only to signed-in participants. Email addresses and private details are not shown.</p></article></div>
+        </section>
+
+        <section class="page" id="page-chat" hidden>
+          <div class="section-title"><div><div class="eyebrow">HIGH FIVES WELCOME</div><h2>The community room.</h2><p class="muted">Celebrate wins, share encouragement, and keep each other moving.</p></div></div>
+          <div class="chat-layout"><article class="panel chat-panel"><div class="chat-heading"><span class="presence-dot"></span><strong>Step Squad Chat</strong><span class="muted small">Participant community</span></div><div id="chat-list" class="chat-list" aria-live="polite"></div><form id="chat-form" class="chat-compose"><label class="sr-only" for="chat-text">Write a message</label><textarea id="chat-text" maxlength="300" rows="2" placeholder="Share a win, cheer someone on..." required></textarea><div class="compose-footer"><span class="muted small"><span id="chat-count">0</span>/300</span><button class="btn btn-primary" type="submit">Post message →</button></div></form><p id="chat-status" class="status" role="status" aria-live="polite"></p></article><aside class="panel chat-rules"><div class="big-icon">♡</div><h3>Good vibes only.</h3><p>This is a space to support each other, whatever your pace.</p><ul><li>Celebrate effort, not just numbers.</li><li>Be kind and respectful.</li><li>Don't share medical or patient information.</li><li>Use “Report” if a message needs staff attention.</li></ul><p class="muted small">Messages are visible to registered, email-verified participants and TAN moderators.</p></aside></div>
+        </section>
+
+        <section class="page" id="page-progress" hidden>
+          <div class="section-title"><div><div class="eyebrow">YOU'RE DOING THE THING</div><h2>My progress.</h2><p class="muted">The little things you do each day add up.</p></div></div><div class="stats-grid"><article class="stat panel"><span class="stat-label">TOTAL STEPS</span><strong id="progress-total">0</strong></article><article class="stat panel"><span class="stat-label">DAYS LOGGED</span><strong id="progress-days">0</strong></article><article class="stat panel"><span class="stat-label">BEST DAY</span><strong id="progress-best">—</strong></article></div><article class="panel content-panel"><h3>Recent step history</h3><div id="progress-bars" class="progress-bars"></div></article>
+        </section>
+
+        <section class="page" id="page-admin" hidden>
+          <div class="section-title"><div><div class="eyebrow">FOR AUTHORIZED TAN STAFF</div><h2>Challenge management.</h2><p class="muted">Private participant records, data exports, and moderation.</p></div></div>
+          <div class="split-grid"><article class="panel content-panel"><h3>Export all step submissions</h3><p class="muted">Download a CSV containing each person's daily entry, including their registered name, email, display name, and steps. Open in Excel or Google Sheets.</p><button id="export-csv" class="btn btn-primary">Download CSV ↓</button><p class="small muted">Store exported files securely. They include participant contact information.</p><p id="admin-status" class="status" role="status" aria-live="polite"></p></article><article class="panel content-panel"><h3>Chat reports</h3><p class="muted small">Participants can flag a message for staff review. Reported messages appear here.</p><button id="refresh-reports" class="btn btn-outline">Refresh reports</button><div id="reports-list" class="reports-list"></div></article></div>
+        </section>
+      </section>
+    </main>
+    <footer class="site-footer"><strong>TAN Healthcare</strong><span>Every step counts. Every person matters.</span><span>Community wellness challenge · Not medical advice</span></footer>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
